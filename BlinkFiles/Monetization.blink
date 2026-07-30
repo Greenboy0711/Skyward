@@ -1,0 +1,37 @@
+option PromiseLibrary = "ReplicatedStorage.Packages.Promise"
+
+import "./Modules"
+
+function CratePurchase {
+    Yield: Promise,
+    Data: (string, u8),
+    Return: boolean
+}
+
+function CrateOpened {
+    Yield: Promise,
+    Return: (boolean, boolean?)
+}
+
+event OpenCrate {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+    data: string
+}
+
+function DailyMultiClaim {
+    Yield: Promise,
+    Return: boolean
+}
+
+function Spin {
+    Yield: Promise,
+    Return: (boolean, u8?)
+}
+
+event StartPackBought {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+}

@@ -1,0 +1,22 @@
+option PromiseLibrary = "ReplicatedStorage.Packages.Promise"
+
+import "./Modules"
+
+event QuestIncClient {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+    data: (u8, u8, f32?)
+}
+
+function RewardClaim {
+    Yield: Promise,
+    Data: (u8, u8),
+    Return: boolean
+}
+
+function ClientTimeQuestComp {
+    Yield: Promise,
+    Data: (u8, u8),
+    Return: boolean
+}

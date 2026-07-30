@@ -1,0 +1,9 @@
+option ClientOutput = "../src/shared/BlinkClient/BlinkMain.luau"
+option ServerOutput = "../src/server/BlinkServer/BlinkMain.luau"
+option PromiseLibrary = "ReplicatedStorage.Packages.Promise"
+
+import "./Player"
+import "./Effects"
+import "./Game"
+import "./Quests"
+import "./Monetization"

@@ -1,0 +1,29 @@
+import "./Modules"
+
+event Notification {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+    data: (string(1..150), string(1..50), Color3, Modules.UDim2?)
+}
+
+event SmallNotif {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+    data: (string, u16, string)
+}
+ 
+event Animation {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+    data: (string(1..50), Instance)
+}
+
+event PreloadAnims {
+    from: Server,
+    type:Reliable,
+    call: SingleAsync,
+    data: string(1..50)[]
+}

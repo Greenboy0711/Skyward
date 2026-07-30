@@ -1,0 +1,35 @@
+option PromiseLibrary = "ReplicatedStorage.Packages.Promise"
+
+import "./Modules"
+
+event PlayerData {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+    data: string
+}
+
+event ChangeModal {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+    data: string?
+}
+
+function InventoryEquip {
+    Yield: Promise,
+    Data: (u32, string),
+    Return: boolean
+}
+
+event ToggleAFK {
+    from: Client,
+    type: Reliable,
+    call: SingleAsync,
+}
+
+function DailyClaim {
+    Yield: Promise,
+    Data: u8,
+    Return: boolean
+}

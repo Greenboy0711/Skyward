@@ -1,0 +1,6 @@
+export struct UDim2 {
+  xScale: f32,
+  xOffset: i32,
+  yScale: f32,
+  yOffset: i32,
+}
