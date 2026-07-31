@@ -92,6 +92,7 @@ end
 
 function Player.init(self: PlayerObj): ()
 	self.Player:SetAttribute("InFloat", false)
+	self.Player:SetAttribute("InDescent", false)
 end
 
 function Player.new(player: Player): PlayerObj

@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local BlinkMain = require(ReplicatedStorage.Shared.BlinkClient.BlinkMain)
 local Float = {}
 
 local player = game:GetService("Players").LocalPlayer
@@ -13,11 +14,18 @@ local buttonCooldown = false
 function Float.init()
     player:GetAttributeChangedSignal("InFloat"):Connect(function()
         screenUi.Enabled = player:GetAttribute("InFloat")
+        descendButton.Visible = true
     end)
 
     descendButton.MouseButton1Click:Connect(function()
-        if not screenUi.Enabled or buttonCooldown then return end
+        if not screenUi.Enabled or buttonCooldown or not player:GetAttribute("InFloat") or player:GetAttribute("InDescent") then return end
         buttonCooldown = true
+        local promise = BlinkMain.Float.AttemptDescend.Invoke()
+        local _, result = promise:await()
+        
+        if result == true then
+            descendButton.Visible = false
+        end
 
         task.wait(0.05)
         buttonCooldown = false

@@ -172,6 +172,7 @@ Queue.Reliable[13] = table.create(256)
 Queue.Reliable[16] = table.create(256)
 Queue.Reliable[17] = table.create(256)
 Queue.Unreliable[0] = table.create(256)
+Queue.Reliable[18] = table.create(256)
 export type Player_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Effects_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Monetization_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
@@ -455,6 +456,19 @@ function SerdesFunctions.Float_ReadEVENT_CameraAng(): (Vector3)
 	local Z = buffer.readf32(RecieveBuffer, BLOCK_START + 8)
 	local Value = Vector3.new(X, Y, Z)
 	return Value
+end
+
+function SerdesFunctions.Float_ReadFUNCTION_DATA_AttemptDescend(): (nil)
+	return nil
+end
+
+function SerdesFunctions.Float_WriteFUNCTION_RETURN_AttemptDescend(Value: boolean, InvocationIdentifier: number): ()
+	-- Allocate BLOCK: 4 bytes
+	local BLOCK_START = Allocate(4)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 18)
+	buffer.writeu8(SendBuffer, BLOCK_START + 1, InvocationIdentifier)
+	buffer.writeu8(SendBuffer, BLOCK_START + 2, 1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 3, Value and 1 or 0)
 end
 
 if not RunService:IsRunning() then
@@ -763,6 +777,9 @@ if not RunService:IsRunning() then
 		CameraAng = {
 			On = NOOP
 		},
+		AttemptDescend = {
+			On = NOOP
+		},
 	},
 	})
 	return Returns :: BLINK_EVENTS_SYMBOL
@@ -939,6 +956,19 @@ Reliable.OnServerEvent:Connect(function(Player: Player, Buffer: buffer, Instance
 					warn("[Blink]: Event queue of \"ClientTimeQuestComp\" exceeded 256, did you forget to implement a listener?")
 				end
 				table.insert(Queue.Reliable[17], {Player, Value1, Value2, InvocationIdentifier} :: {any})
+			end
+		elseif Index == 18 then
+			-- Read BLOCK: 1 bytes
+			local BLOCK_START = Read(1)
+			local InvocationIdentifier = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+			local Value: nil = SerdesFunctions.Float_ReadFUNCTION_DATA_AttemptDescend()
+			if Events.Reliable[18] ~= nil then
+				task.spawn(Events.Reliable[18], Player, Value, InvocationIdentifier)
+			else
+				if #Queue.Reliable[18] > 256 then
+					warn("[Blink]: Event queue of \"AttemptDescend\" exceeded 256, did you forget to implement a listener?")
+				end
+				table.insert(Queue.Reliable[18], {Player, Value, InvocationIdentifier} :: {any})
 			end
 		end
 	end
@@ -1851,6 +1881,34 @@ local Returns = table.freeze({
 					end
 				end
 			end
+		},
+		AttemptDescend = {
+		On = function(Listener: (Player, nil) -> (boolean)): ()
+			Events.Reliable[18] = function(Player: Player, Value: nil, InvocationIdentifier: number): ()
+				local ReturnValue: boolean;
+				local Success, Error = pcall(function ()
+					ReturnValue = Listener(Player, Value)
+				end)
+				Load(PlayersMap[Player])
+				if Success ~= true then
+					local Position = Allocate(3)
+					buffer.writeu8(SendBuffer, Position, 18)
+					buffer.writeu8(SendBuffer, Position + 1, InvocationIdentifier)
+					buffer.writeu8(SendBuffer, Position + 2, 0)
+					warn(`"AttemptDescend" encountered an error, {Error}`)
+				else
+					SerdesFunctions.Float_WriteFUNCTION_RETURN_AttemptDescend(ReturnValue, InvocationIdentifier)
+				end
+				PlayersMap[Player] = Save()
+			end
+			task.spawn(function (): ()
+				local EventQueue = Queue.Reliable[18] or {}
+				Queue.Reliable[18] = nil
+				for Index, Arguments in EventQueue do
+					Events.Reliable[18](table.unpack(Arguments))
+				end
+			end)
+		end
 		},
 	},
 })

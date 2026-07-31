@@ -178,6 +178,7 @@ Queue.Reliable[14] = table.create(256)
 Queue.Reliable[15] = table.create(256)
 Queue.Reliable[16] = table.create(256)
 Queue.Reliable[17] = table.create(256)
+Queue.Reliable[18] = table.create(256)
 export type Player_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Effects_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Monetization_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
@@ -490,6 +491,24 @@ function SerdesFunctions.Float_WriteEVENT_CameraAng(Value: Vector3): ()
 	buffer.writef32(SendBuffer, BLOCK_START + 9, Vector.Z)
 end
 
+function SerdesFunctions.Float_WriteFUNCTION_DATA_AttemptDescend(Value: nil, InvocationIdentifier: number): ()
+	-- Allocate BLOCK: 2 bytes
+	local BLOCK_START = Allocate(2)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 18)
+	buffer.writeu8(SendBuffer, BLOCK_START + 1, InvocationIdentifier)
+end
+
+function SerdesFunctions.Float_ReadFUNCTION_RETURN_AttemptDescend(): (boolean)
+	-- Read BLOCK: 2 bytes
+	local BLOCK_START = Read(2)
+	local Success = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+	if Success ~= 1 then
+		error("Server encountered an error.")
+	end
+	local Value = (buffer.readu8(RecieveBuffer, BLOCK_START + 1) == 1)
+	return Value
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
@@ -769,6 +788,9 @@ if not RunService:IsRunning() then
 		CameraAng = {
 			Fire = NOOP
 		},
+		AttemptDescend = {
+			Invoke = NOOP
+		},
 	},
 	})
 	return Returns :: BLINK_EVENTS_SYMBOL
@@ -985,6 +1007,17 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 			local InvocationIdentifier = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
 				local Success, ReturnValue = pcall(function ()
 					return SerdesFunctions.Quests_ReadFUNCTION_RETURN_ClientTimeQuestComp()
+				end)
+			if Calls[InvocationIdentifier] ~= nil then
+				task.spawn(Calls[InvocationIdentifier], Success, ReturnValue)
+				Calls[InvocationIdentifier] = nil
+			end
+		elseif Index == 18 then
+			-- Read BLOCK: 1 bytes
+			local BLOCK_START = Read(1)
+			local InvocationIdentifier = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+				local Success, ReturnValue = pcall(function ()
+					return SerdesFunctions.Float_ReadFUNCTION_RETURN_AttemptDescend()
 				end)
 			if Calls[InvocationIdentifier] ~= nil then
 				task.spawn(Calls[InvocationIdentifier], Success, ReturnValue)
@@ -1550,6 +1583,28 @@ local Returns = table.freeze({
 				buffer.copy(Buffer, 0, SendBuffer, 0, SendCursor)
 				Unreliable:FireServer(Buffer, SendInstances)
 				Load(Previous)
+			end
+		},
+		AttemptDescend = {
+			Invoke = function(Value: nil)
+				return Promise.new(function (Resolve, Reject, OnCancel)
+					local InvocationIdentifier = Invoke()
+					if Calls[InvocationIdentifier] ~= nil then
+						Invocations -= 1
+						error("More than 256 calls are awaiting a response, this packet has been dropped.")
+					end
+					SerdesFunctions.Float_WriteFUNCTION_DATA_AttemptDescend(Value, InvocationIdentifier)
+					Calls[InvocationIdentifier] = coroutine.running()
+					OnCancel(function ()
+						Calls[InvocationIdentifier] = nil
+					end)
+					local Success, ReturnValue: boolean = coroutine.yield()
+					if Success ~= true then
+						Reject("There was an exception while processing \"AttemptDescend\".")
+						return 
+					end
+					Resolve(ReturnValue)
+				end)
 			end
 		},
 	},

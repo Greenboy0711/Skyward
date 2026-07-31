@@ -13,7 +13,7 @@ local template = {
 	["Stats"] = {["Time Played"] = 0, ["Bloxes"] = 0, ["Mines Placed"] = 0, ["Wins"] = 0},
 	["DailyRewards"] = {["Time"] = -1, ["Day"] = 1, ["Special"] = 0},
 
-	["Upgrades"] = {["Bubble Resistance"] = 1},
+	["Upgrades"] = {["Bubble Resistance"] = 100},
 
 	["Settings"] = {
 		["Background Music"] = 100,

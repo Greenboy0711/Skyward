@@ -11,6 +11,5 @@ event CameraAng {
 
 function AttemptDescend {
     Yield: Promise,
-    Data: u8,
     Return: boolean
 }
