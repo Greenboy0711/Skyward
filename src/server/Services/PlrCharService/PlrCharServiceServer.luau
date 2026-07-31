@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
 local ItemsData = require(ReplicatedStorage.Shared.Modules.Data.ItemsData)
 local MonetizationData = require(ReplicatedStorage.Shared.Modules.Data.MonetizationData)
 local TrailsData = require(ReplicatedStorage.Shared.Modules.Data.TrailsData)
@@ -21,6 +22,11 @@ end
 
 local function characterAdded(player, character)
     setPlayerChrCollisions(character)
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    local alignOri = ServerStorage.Templates.AlignOrientation:Clone()
+    alignOri.Attachment0 = humanoidRootPart:WaitForChild("RootAttachment")
+    alignOri.Parent = humanoidRootPart
 end
 
 local function playerAdded(player: Player)

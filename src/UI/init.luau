@@ -11,7 +11,7 @@ local camera = workspace.CurrentCamera
 local blur = Lighting:WaitForChild("Blur")
 
 local defaultHud = {"Buttons"}
-local modals = {"RoundControls", "Inventory", "Index", "Shop", "Spectate", "Quests", "Settings", "Crates", "StarterPack"}
+local modals = {} -- "Shop", "Quests", "Settings", "StarterPack"
 local nonBlurModals = {"RoundControls", "Spectate"}
 local currentModal = nil
 

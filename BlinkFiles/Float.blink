@@ -1,0 +1,16 @@
+option PromiseLibrary = "ReplicatedStorage.Packages.Promise"
+
+import "./Modules"
+
+event CameraAng {
+    from: Client,
+    type: Unreliable,
+    call: SingleAsync,
+    data: vector
+}
+
+function AttemptDescend {
+    Yield: Promise,
+    Data: u8,
+    Return: boolean
+}

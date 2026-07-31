@@ -91,7 +91,7 @@ function Player:destroy()
 end
 
 function Player.init(self: PlayerObj): ()
-	self.Player:SetAttribute("InGame", false)
+	self.Player:SetAttribute("InFloat", false)
 end
 
 function Player.new(player: Player): PlayerObj

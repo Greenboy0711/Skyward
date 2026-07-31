@@ -9,15 +9,20 @@ type ItemData = {
 }
 
 local template = {
-	currency = 0,
-	inventory = {
-		apples = 5,
-		oranges = 10,
+	["Currencies"] = {BoomBux = 10000, Spins = 3},
+	["Stats"] = {["Time Played"] = 0, ["Bloxes"] = 0, ["Mines Placed"] = 0, ["Wins"] = 0},
+	["DailyRewards"] = {["Time"] = -1, ["Day"] = 1, ["Special"] = 0},
+
+	["Upgrades"] = {["Bubble Resistance"] = 1},
+
+	["Settings"] = {
+		["Background Music"] = 100,
+		["Sound Effects"] = 100,
+		["Special Effects"] = true
 	},
-	settings = {
-		music = true,
-		sfx = true,
-	},
+
+	["Misc"] = {} :: {[string]: boolean},
+
 	items = {} :: { [string]: ItemData },
 	equippedItemId = nil :: string?,
 	questProgress = {} :: { number },

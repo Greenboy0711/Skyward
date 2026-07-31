@@ -171,10 +171,12 @@ Queue.Reliable[12] = table.create(256)
 Queue.Reliable[13] = table.create(256)
 Queue.Reliable[16] = table.create(256)
 Queue.Reliable[17] = table.create(256)
+Queue.Unreliable[0] = table.create(256)
 export type Player_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Effects_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Monetization_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Quests_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
+export type Float_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 function SerdesFunctions.Player_WriteEVENT_PlayerData(Value: string): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
@@ -445,6 +447,16 @@ function SerdesFunctions.Quests_WriteFUNCTION_RETURN_ClientTimeQuestComp(Value: 
 	buffer.writeu8(SendBuffer, BLOCK_START + 3, Value and 1 or 0)
 end
 
+function SerdesFunctions.Float_ReadEVENT_CameraAng(): (Vector3)
+	-- Read BLOCK: 12 bytes
+	local BLOCK_START = Read(12)
+	local X = buffer.readf32(RecieveBuffer, BLOCK_START + 0)
+	local Y = buffer.readf32(RecieveBuffer, BLOCK_START + 4)
+	local Z = buffer.readf32(RecieveBuffer, BLOCK_START + 8)
+	local Value = Vector3.new(X, Y, Z)
+	return Value
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
@@ -705,6 +717,53 @@ if not RunService:IsRunning() then
 			On = NOOP
 		},
 	},
+	Float = {
+		Modules = {
+			UDim2 = {
+				Read = function(Buffer: buffer): (Float_Modules_UDim2)
+					-- Buffer overwrite
+					local PreviousCursor = RecieveCursor
+					local PreviousBuffer = RecieveBuffer
+					local PreviousInstanceCursor = RecieveInstanceCursor
+					RecieveCursor = 0
+					RecieveBuffer = Buffer
+					-- Read BLOCK: 16 bytes
+					local BLOCK_START = Read(16)
+					-- Buffer read
+					local Value = {} :: any
+					Value.xScale = buffer.readf32(RecieveBuffer, BLOCK_START + 0)
+					Value.xOffset = buffer.readi32(RecieveBuffer, BLOCK_START + 4)
+					Value.yScale = buffer.readf32(RecieveBuffer, BLOCK_START + 8)
+					Value.yOffset = buffer.readi32(RecieveBuffer, BLOCK_START + 12)
+					-- Buffer restore
+					RecieveCursor = PreviousCursor
+					RecieveBuffer = PreviousBuffer
+					RecieveInstanceCursor = PreviousInstanceCursor
+					return Value
+				end,
+				Write = function(Value: Float_Modules_UDim2): (buffer)
+					-- Buffer overwrite
+					local Previous = Save()
+					Load()
+					-- Allocate BLOCK: 16 bytes
+					local BLOCK_START = Allocate(16)
+					-- Buffer write
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Value.xScale)
+					buffer.writei32(SendBuffer, BLOCK_START + 4, Value.xOffset)
+					buffer.writef32(SendBuffer, BLOCK_START + 8, Value.yScale)
+					buffer.writei32(SendBuffer, BLOCK_START + 12, Value.yOffset)
+					-- Buffer restore
+					local Result = buffer.create(SendCursor)
+					buffer.copy(Result, 0, SendBuffer, 0, SendCursor)
+					Load(Previous)
+					return Result
+				end
+			},
+		},
+		CameraAng = {
+			On = NOOP
+		},
+	},
 	})
 	return Returns :: BLINK_EVENTS_SYMBOL
 end
@@ -899,6 +958,12 @@ Unreliable.OnServerEvent:Connect(function(Player: Player, Buffer: buffer, Instan
 		-- Read BLOCK: 1 bytes
 		local BLOCK_START = Read(1)
 		local Index = buffer.readu8(RecieveBuffer, BLOCK_START + 0)
+		if Index == 0 then
+			local Value: Vector3 = SerdesFunctions.Float_ReadEVENT_CameraAng()
+			if Events.Unreliable[0] ~= nil then
+				task.spawn(Events.Unreliable[0], Player, Value)
+			end
+		end
 	end
 end)
 
@@ -1732,6 +1797,60 @@ local Returns = table.freeze({
 				end
 			end)
 		end
+		},
+	},
+	Float = {
+		Modules = {
+			UDim2 = {
+				Read = function(Buffer: buffer): (Float_Modules_UDim2)
+					-- Buffer overwrite
+					local PreviousCursor = RecieveCursor
+					local PreviousBuffer = RecieveBuffer
+					local PreviousInstanceCursor = RecieveInstanceCursor
+					RecieveCursor = 0
+					RecieveBuffer = Buffer
+					-- Read BLOCK: 16 bytes
+					local BLOCK_START = Read(16)
+					-- Buffer read
+					local Value = {} :: any
+					Value.xScale = buffer.readf32(RecieveBuffer, BLOCK_START + 0)
+					Value.xOffset = buffer.readi32(RecieveBuffer, BLOCK_START + 4)
+					Value.yScale = buffer.readf32(RecieveBuffer, BLOCK_START + 8)
+					Value.yOffset = buffer.readi32(RecieveBuffer, BLOCK_START + 12)
+					-- Buffer restore
+					RecieveCursor = PreviousCursor
+					RecieveBuffer = PreviousBuffer
+					RecieveInstanceCursor = PreviousInstanceCursor
+					return Value
+				end,
+				Write = function(Value: Float_Modules_UDim2): (buffer)
+					-- Buffer overwrite
+					local Previous = Save()
+					Load()
+					-- Allocate BLOCK: 16 bytes
+					local BLOCK_START = Allocate(16)
+					-- Buffer write
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Value.xScale)
+					buffer.writei32(SendBuffer, BLOCK_START + 4, Value.xOffset)
+					buffer.writef32(SendBuffer, BLOCK_START + 8, Value.yScale)
+					buffer.writei32(SendBuffer, BLOCK_START + 12, Value.yOffset)
+					-- Buffer restore
+					local Result = buffer.create(SendCursor)
+					buffer.copy(Result, 0, SendBuffer, 0, SendCursor)
+					Load(Previous)
+					return Result
+				end
+			},
+		},
+		CameraAng = {
+			On = function(Listener: (Player: Player, Value: Vector3) -> ()): () -> ()
+				Events.Unreliable[0] = Listener
+				return function (): ()
+					if Events.Unreliable[0] == Listener then
+						Events.Unreliable[0] = nil
+					end
+				end
+			end
 		},
 	},
 })

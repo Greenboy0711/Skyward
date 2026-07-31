@@ -182,6 +182,7 @@ export type Player_Modules_UDim2 = { xScale: number, xOffset: number, yScale: nu
 export type Effects_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Monetization_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Quests_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
+export type Float_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 function SerdesFunctions.Player_ReadEVENT_PlayerData(): (string)
 	-- Read BLOCK: 2 bytes
 	local BLOCK_START = Read(2)
@@ -479,6 +480,16 @@ function SerdesFunctions.Quests_ReadFUNCTION_RETURN_ClientTimeQuestComp(): (bool
 	return Value
 end
 
+function SerdesFunctions.Float_WriteEVENT_CameraAng(Value: Vector3): ()
+	-- Allocate BLOCK: 13 bytes
+	local BLOCK_START = Allocate(13)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 0)
+	local Vector = Value
+	buffer.writef32(SendBuffer, BLOCK_START + 1, Vector.X)
+	buffer.writef32(SendBuffer, BLOCK_START + 5, Vector.Y)
+	buffer.writef32(SendBuffer, BLOCK_START + 9, Vector.Z)
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
@@ -710,6 +721,53 @@ if not RunService:IsRunning() then
 		},
 		ClientTimeQuestComp = {
 			Invoke = NOOP
+		},
+	},
+	Float = {
+		Modules = {
+			UDim2 = {
+				Read = function(Buffer: buffer): (Float_Modules_UDim2)
+					-- Buffer overwrite
+					local PreviousCursor = RecieveCursor
+					local PreviousBuffer = RecieveBuffer
+					local PreviousInstanceCursor = RecieveInstanceCursor
+					RecieveCursor = 0
+					RecieveBuffer = Buffer
+					-- Read BLOCK: 16 bytes
+					local BLOCK_START = Read(16)
+					-- Buffer read
+					local Value = {} :: any
+					Value.xScale = buffer.readf32(RecieveBuffer, BLOCK_START + 0)
+					Value.xOffset = buffer.readi32(RecieveBuffer, BLOCK_START + 4)
+					Value.yScale = buffer.readf32(RecieveBuffer, BLOCK_START + 8)
+					Value.yOffset = buffer.readi32(RecieveBuffer, BLOCK_START + 12)
+					-- Buffer restore
+					RecieveCursor = PreviousCursor
+					RecieveBuffer = PreviousBuffer
+					RecieveInstanceCursor = PreviousInstanceCursor
+					return Value
+				end,
+				Write = function(Value: Float_Modules_UDim2): (buffer)
+					-- Buffer overwrite
+					local Previous = Save()
+					Load()
+					-- Allocate BLOCK: 16 bytes
+					local BLOCK_START = Allocate(16)
+					-- Buffer write
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Value.xScale)
+					buffer.writei32(SendBuffer, BLOCK_START + 4, Value.xOffset)
+					buffer.writef32(SendBuffer, BLOCK_START + 8, Value.yScale)
+					buffer.writei32(SendBuffer, BLOCK_START + 12, Value.yOffset)
+					-- Buffer restore
+					local Result = buffer.create(SendCursor)
+					buffer.copy(Result, 0, SendBuffer, 0, SendCursor)
+					Load(Previous)
+					return Result
+				end
+			},
+		},
+		CameraAng = {
+			Fire = NOOP
 		},
 	},
 	})
@@ -1437,6 +1495,61 @@ local Returns = table.freeze({
 					end
 					Resolve(ReturnValue)
 				end)
+			end
+		},
+	},
+	Float = {
+		Modules = {
+			UDim2 = {
+				Read = function(Buffer: buffer): (Float_Modules_UDim2)
+					-- Buffer overwrite
+					local PreviousCursor = RecieveCursor
+					local PreviousBuffer = RecieveBuffer
+					local PreviousInstanceCursor = RecieveInstanceCursor
+					RecieveCursor = 0
+					RecieveBuffer = Buffer
+					-- Read BLOCK: 16 bytes
+					local BLOCK_START = Read(16)
+					-- Buffer read
+					local Value = {} :: any
+					Value.xScale = buffer.readf32(RecieveBuffer, BLOCK_START + 0)
+					Value.xOffset = buffer.readi32(RecieveBuffer, BLOCK_START + 4)
+					Value.yScale = buffer.readf32(RecieveBuffer, BLOCK_START + 8)
+					Value.yOffset = buffer.readi32(RecieveBuffer, BLOCK_START + 12)
+					-- Buffer restore
+					RecieveCursor = PreviousCursor
+					RecieveBuffer = PreviousBuffer
+					RecieveInstanceCursor = PreviousInstanceCursor
+					return Value
+				end,
+				Write = function(Value: Float_Modules_UDim2): (buffer)
+					-- Buffer overwrite
+					local Previous = Save()
+					Load()
+					-- Allocate BLOCK: 16 bytes
+					local BLOCK_START = Allocate(16)
+					-- Buffer write
+					buffer.writef32(SendBuffer, BLOCK_START + 0, Value.xScale)
+					buffer.writei32(SendBuffer, BLOCK_START + 4, Value.xOffset)
+					buffer.writef32(SendBuffer, BLOCK_START + 8, Value.yScale)
+					buffer.writei32(SendBuffer, BLOCK_START + 12, Value.yOffset)
+					-- Buffer restore
+					local Result = buffer.create(SendCursor)
+					buffer.copy(Result, 0, SendBuffer, 0, SendCursor)
+					Load(Previous)
+					return Result
+				end
+			},
+		},
+		CameraAng = {
+			Fire = function(Value: Vector3): ()
+				local Previous = Save()
+				Load()
+				SerdesFunctions.Float_WriteEVENT_CameraAng(Value)
+				local Buffer = buffer.create(SendCursor)
+				buffer.copy(Buffer, 0, SendBuffer, 0, SendCursor)
+				Unreliable:FireServer(Buffer, SendInstances)
+				Load(Previous)
 			end
 		},
 	},
