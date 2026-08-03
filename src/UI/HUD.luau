@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local FloatMath = require(ReplicatedStorage.Shared.Modules.Math.FloatMath)
 local HUD = {}
 
 local player = Players.LocalPlayer
@@ -36,7 +37,7 @@ RunService.RenderStepped:Connect(function()
         if not char then return end
 
         if curPlayer:GetAttribute("InFloat") then
-            frame.Position = UDim2.fromScale(1, math.max(0, (MAX_HEIGHT - char.PrimaryPart.Position.Y) / MAX_HEIGHT))
+            frame.Position = UDim2.fromScale(1, math.max(0, (MAX_HEIGHT - FloatMath.calcHeight(char.PrimaryPart.Position.Y)) / MAX_HEIGHT))
         else
             frame.Position = UDim2.fromScale(1, 1)
         end

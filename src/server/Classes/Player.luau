@@ -2,9 +2,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Promise = require(ReplicatedStorage.Packages.Promise)
 local SafeDestroy = require(ReplicatedStorage.Shared.Modules.Data.SafeDestroy)
+local FloatMath = require(ReplicatedStorage.Shared.Modules.Math.FloatMath)
 local BlinkMain = require(ServerScriptService.Server.BlinkServer.BlinkMain)
 local PlayerStore = require(ServerScriptService.Server.Classes.Stores.PlayerStore)
-local PlrData = require(ServerScriptService.Server.Modules.Data.PlrData).server
+local PlrData = require(ReplicatedStorage.Shared.Modules.Data.PlrData).server
 
 local Player = {}
 Player.__index = Player
@@ -93,6 +94,11 @@ end
 function Player.init(self: PlayerObj): ()
 	self.Player:SetAttribute("InFloat", false)
 	self.Player:SetAttribute("InDescent", false)
+
+	local initData = PlrData.Service:waitForData(self.Player)
+	self.Player:SetAttribute("MystCap", FloatMath.calcMystCap(initData.Upgrades["Myst Capacity"]()))
+	self.Player:SetAttribute("MystQuant", 0)
+	self.Player:SetAttribute("MystQuality", 1)
 end
 
 function Player.new(player: Player): PlayerObj

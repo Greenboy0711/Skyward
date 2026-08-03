@@ -15,7 +15,7 @@ local prevY = 0
 function GameServiceClient.Heartbeat()
     if not player:GetAttribute("InFloat") then return end
 
-    local x, y, z = camera.CFrame:ToOrientation()
+    local x, y, z = camera.CFrame:ToOrientation() -- Send camera angle
     if math.abs(prevY - y) >= 0.001 then
         BlinkMain.Float.CameraAng.Fire(Vector3.new(x, -y, z))
     end
