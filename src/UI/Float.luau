@@ -4,6 +4,7 @@ local BlinkMain = require(ReplicatedStorage.Shared.BlinkClient.BlinkMain)
 local PlrData = require(ReplicatedStorage.Shared.Modules.Data.PlrData).client
 local FloatMath = require(ReplicatedStorage.Shared.Modules.Math.FloatMath)
 local BarMeters = require(ReplicatedStorage.Shared.Modules.UI.BarMeters)
+local ColorThemes = require(ReplicatedStorage.Shared.Modules.UI.ColorThemes)
 local Float = {}
 
 local player = game:GetService("Players").LocalPlayer
@@ -13,6 +14,7 @@ local heightFrame = screenUi:WaitForChild("HeightFrame")
 local descendButton = screenUi:WaitForChild("DescendButton")
 local strengthLabel = screenUi:WaitForChild("BubbleStrengthLabel")
 local mystBar = screenUi:WaitForChild("MystBar")
+local mystCollectToggle = mystBar:WaitForChild("MystCollectToggle")
 
 local buttonCooldown = false
 
@@ -22,12 +24,6 @@ local function updateMystBar(mystQuant, mystCap)
 end
 
 function Float.init()
-    player:GetAttributeChangedSignal("InFloat"):Connect(function()
-        local inFloat = player:GetAttribute("InFloat")
-        screenUi.Enabled = inFloat
-        descendButton.Visible = true
-    end)
-
     descendButton.MouseButton1Click:Connect(function()
         if not screenUi.Enabled or buttonCooldown or not player:GetAttribute("InFloat") or player:GetAttribute("InDescent") then return end
         buttonCooldown = true
@@ -40,6 +36,25 @@ function Float.init()
 
         task.wait(0.05)
         buttonCooldown = false
+    end)
+
+    mystCollectToggle.MouseButton1Click:Connect(function()
+        if buttonCooldown then return end
+        buttonCooldown = true
+        BlinkMain.Float.ToggleMystColl.Fire()
+
+        task.wait(0.05)
+        buttonCooldown = false
+    end)
+
+    player:GetAttributeChangedSignal("InFloat"):Connect(function()
+        local inFloat = player:GetAttribute("InFloat")
+        screenUi.Enabled = inFloat
+        descendButton.Visible = true
+    end)
+
+    player:GetAttributeChangedSignal("IsCollMyst"):Connect(function()
+        ColorThemes.toggleTheme(player:GetAttribute("IsCollMyst") and "ButtonGreen" or "ButtonRed", mystCollectToggle)
     end)
 end
 

@@ -74,6 +74,10 @@ function FloatServiceServer.init()
 
         return true
     end)
+
+    BlinkMain.Float.ToggleMystColl.On(function(player)
+        player:SetAttribute("IsCollMyst", not player:GetAttribute("IsCollMyst"))
+    end)
 end
 
 function FloatServiceServer.Heartbeat(args) -- Manage floating players
@@ -115,7 +119,7 @@ function FloatServiceServer.Heartbeat(args) -- Manage floating players
             char.Bubble.CanCollide = false
         end
 
-        if not player:GetAttribute("InDescent") and data.TotalTime - data.LastMystColl >= FloatMath.MYST_COLL_INTER
+        if not player:GetAttribute("InDescent") and player:GetAttribute("IsCollMyst") and data.TotalTime - data.LastMystColl >= FloatMath.MYST_COLL_INTER
                 and player:GetAttribute("MystQuant") < player:GetAttribute("MystCap") then
             data.LastMystColl = data.TotalTime
             player:SetAttribute("MystQuant", math.min(player:GetAttribute("MystQuant") + 1, player:GetAttribute("MystCap")))

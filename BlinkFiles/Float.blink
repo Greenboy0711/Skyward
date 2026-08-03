@@ -21,3 +21,9 @@ event PlayerEnteredFloat {
     call: SingleAsync,
     data: Player?
 }
+
+event ToggleMystColl {
+    from: Client,
+    type: Unreliable,
+    call: SingleAsync,
+}

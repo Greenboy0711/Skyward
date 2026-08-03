@@ -173,6 +173,7 @@ Queue.Reliable[16] = table.create(256)
 Queue.Reliable[17] = table.create(256)
 Queue.Unreliable[0] = table.create(256)
 Queue.Reliable[18] = table.create(256)
+Queue.Unreliable[1] = table.create(256)
 export type Player_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Effects_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Monetization_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
@@ -477,6 +478,10 @@ function SerdesFunctions.Float_WriteEVENT_PlayerEnteredFloat(Value: Player?): ()
 	local BLOCK_START = Allocate(1)
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 19)
 	table.insert(SendInstances, Value or Null)
+end
+
+function SerdesFunctions.Float_ReadEVENT_ToggleMystColl(): (nil)
+	return nil
 end
 
 if not RunService:IsRunning() then
@@ -794,6 +799,9 @@ if not RunService:IsRunning() then
 			FireList = NOOP,
 			FireExcept = NOOP
 		},
+		ToggleMystColl = {
+			On = NOOP
+		},
 	},
 	})
 	return Returns :: BLINK_EVENTS_SYMBOL
@@ -1006,6 +1014,11 @@ Unreliable.OnServerEvent:Connect(function(Player: Player, Buffer: buffer, Instan
 			local Value: Vector3 = SerdesFunctions.Float_ReadEVENT_CameraAng()
 			if Events.Unreliable[0] ~= nil then
 				task.spawn(Events.Unreliable[0], Player, Value)
+			end
+		elseif Index == 1 then
+			local Value: nil = SerdesFunctions.Float_ReadEVENT_ToggleMystColl()
+			if Events.Unreliable[1] ~= nil then
+				task.spawn(Events.Unreliable[1], Player, Value)
 			end
 		end
 	end
@@ -1969,6 +1982,16 @@ local Returns = table.freeze({
 					PlayersMap[Player] = Save()
 				end
 			end,
+		},
+		ToggleMystColl = {
+			On = function(Listener: (Player: Player, Value: nil) -> ()): () -> ()
+				Events.Unreliable[1] = Listener
+				return function (): ()
+					if Events.Unreliable[1] == Listener then
+						Events.Unreliable[1] = nil
+					end
+				end
+			end
 		},
 	},
 })

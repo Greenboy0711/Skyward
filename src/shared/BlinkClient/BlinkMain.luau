@@ -524,6 +524,12 @@ function SerdesFunctions.Float_ReadEVENT_PlayerEnteredFloat(): (Player?)
 	return Value
 end
 
+function SerdesFunctions.Float_WriteEVENT_ToggleMystColl(Value: nil): ()
+	-- Allocate BLOCK: 1 bytes
+	local BLOCK_START = Allocate(1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 1)
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
@@ -808,6 +814,9 @@ if not RunService:IsRunning() then
 		},
 		PlayerEnteredFloat = {
 			On = NOOP
+		},
+		ToggleMystColl = {
+			Fire = NOOP
 		},
 	},
 	})
@@ -1647,6 +1656,17 @@ local Returns = table.freeze({
 						Events.Reliable[19] = nil
 					end
 				end
+			end
+		},
+		ToggleMystColl = {
+			Fire = function(Value: nil): ()
+				local Previous = Save()
+				Load()
+				SerdesFunctions.Float_WriteEVENT_ToggleMystColl(Value)
+				local Buffer = buffer.create(SendCursor)
+				buffer.copy(Buffer, 0, SendBuffer, 0, SendCursor)
+				Unreliable:FireServer(Buffer, SendInstances)
+				Load(Previous)
 			end
 		},
 	},

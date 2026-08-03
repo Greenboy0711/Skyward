@@ -99,6 +99,7 @@ function Player.init(self: PlayerObj): ()
 	self.Player:SetAttribute("MystCap", FloatMath.calcMystCap(initData.Upgrades["Myst Capacity"]()))
 	self.Player:SetAttribute("MystQuant", 0)
 	self.Player:SetAttribute("MystQuality", 1)
+	self.Player:SetAttribute("IsCollMyst", true)
 end
 
 function Player.new(player: Player): PlayerObj

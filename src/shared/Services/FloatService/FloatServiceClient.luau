@@ -44,6 +44,9 @@ function FloatServiceClient.Heartbeat(dt)
         local percent = curPlr:GetAttribute("MystQuant") / curPlr:GetAttribute("MystCap")
         percent = math.max(math.min(percent, 1), 0)
 
+        fill.Bottom.Transparency = percent <= 0.5 and 0.7 or 1
+        fill.BottomMax.Transparency = percent > 0.5 and 0.7 or 1
+        fill.BottomMin.Size = Vector3.new(targetDiam * 0.5, 0.001, targetDiam * 0.5)
         fill.Bottom.Position = fill.BottomMin.Position:Lerp(fill.BottomMax.Position, math.min(percent * 2, 1))
         fill.Bottom.Size = fill.BottomMin.Size:Lerp(fill.BottomMax.Size, math.min(percent * 2, 1))
 

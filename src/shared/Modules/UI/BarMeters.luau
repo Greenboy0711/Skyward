@@ -1,7 +1,7 @@
 local TweenService = game:GetService("TweenService")
 local barMeters = {}
 
-local sizeTI = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+local sizeTI = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 
 function barMeters.resize(bar, percent)
     percent = math.min(math.max(percent, 0), 1)
