@@ -179,11 +179,13 @@ Queue.Reliable[15] = table.create(256)
 Queue.Reliable[16] = table.create(256)
 Queue.Reliable[17] = table.create(256)
 Queue.Reliable[18] = table.create(256)
+Queue.Reliable[19] = table.create(256)
 export type Player_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Effects_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Monetization_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Quests_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Float_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
+export type Float_Player = Player
 function SerdesFunctions.Player_ReadEVENT_PlayerData(): (string)
 	-- Read BLOCK: 2 bytes
 	local BLOCK_START = Read(2)
@@ -509,6 +511,19 @@ function SerdesFunctions.Float_ReadFUNCTION_RETURN_AttemptDescend(): (boolean)
 	return Value
 end
 
+function SerdesFunctions.Float_ReadEVENT_PlayerEnteredFloat(): (Player?)
+	local Value
+	RecieveInstanceCursor += 1
+	if typeof(RecieveInstances[RecieveInstanceCursor]) == "Instance" then
+		RecieveInstanceCursor -= 1
+		RecieveInstanceCursor += 1
+		Value = RecieveInstances[RecieveInstanceCursor]
+		if typeof(Value) ~= "Instance" then error(`Expected an Instance, got {typeof(Value)} instead.`) end
+		if not Value:IsA("Player") then error(`Expected an Instance of type "Player", got "{Value.ClassName}" instead.`) end
+	end
+	return Value
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
@@ -791,6 +806,9 @@ if not RunService:IsRunning() then
 		AttemptDescend = {
 			Invoke = NOOP
 		},
+		PlayerEnteredFloat = {
+			On = NOOP
+		},
 	},
 	})
 	return Returns :: BLINK_EVENTS_SYMBOL
@@ -1022,6 +1040,16 @@ Reliable.OnClientEvent:Connect(function(Buffer: buffer, Instances: {Instance})
 			if Calls[InvocationIdentifier] ~= nil then
 				task.spawn(Calls[InvocationIdentifier], Success, ReturnValue)
 				Calls[InvocationIdentifier] = nil
+			end
+		elseif Index == 19 then
+			local Value: Player? = SerdesFunctions.Float_ReadEVENT_PlayerEnteredFloat()
+			if Events.Reliable[19] ~= nil then
+				task.spawn(Events.Reliable[19], Value)
+			else
+				if #Queue.Reliable[19] > 256 then
+					warn("[Blink]: Event queue of \"PlayerEnteredFloat\" exceeded 256, did you forget to implement a listener?")
+				end
+				table.insert(Queue.Reliable[19], {Value} :: {any})
 			end
 		end
 	end
@@ -1605,6 +1633,20 @@ local Returns = table.freeze({
 					end
 					Resolve(ReturnValue)
 				end)
+			end
+		},
+		PlayerEnteredFloat = {
+			On = function(Listener: (Value: Player?) -> ()): () -> ()
+				Events.Reliable[19] = Listener
+				for Index, Arguments in Queue.Reliable[19] do
+					task.spawn(Listener, table.unpack(Arguments))
+				end
+				Queue.Reliable[19] = {}
+				return function (): ()
+					if Events.Reliable[19] == Listener then
+						Events.Reliable[19] = nil
+					end
+				end
 			end
 		},
 	},

@@ -44,8 +44,8 @@ function FloatServiceServer.init()
         floatData[player] = {
             PopLimit = FloatMath.calcPopLimit(PlrData[player].Upgrades["Bubble Resistance"]()), 
             PrevVelocity = Vector3.new(0, Y_SPEED, 0),
-            LastTime = os.time(),
-            LastMystColl = os.time()
+            TotalTime = os.clock(),
+            LastMystColl = os.clock()
         }
 
         player:SetAttribute("InFloat", true)
@@ -55,6 +55,8 @@ function FloatServiceServer.init()
         bubble:PivotTo(char.HumanoidRootPart.CFrame)
         bubble.MainWeld.Part1 = char.HumanoidRootPart
         bubble.Parent = char
+
+        BlinkMain.Float.PlayerEnteredFloat.FireAll(player)
     end)
 
     BlinkMain.Float.CameraAng.On(function(player, cameraAng)
@@ -81,6 +83,7 @@ function FloatServiceServer.Heartbeat(args) -- Manage floating players
         if not player or not player:GetAttribute("InFloat") then floatData[player] = nil; continue end
         local char = player.Character
         if not char then continue end
+        data.TotalTime += dt
 
         pcall(function() -- Set movement
             local currentVelocity
@@ -112,13 +115,12 @@ function FloatServiceServer.Heartbeat(args) -- Manage floating players
             char.Bubble.CanCollide = false
         end
 
-        if not player:GetAttribute("InDescent") and os.time() - data.LastMystColl >= FloatMath.MYST_COLL_INTER
+        if not player:GetAttribute("InDescent") and data.TotalTime - data.LastMystColl >= FloatMath.MYST_COLL_INTER
                 and player:GetAttribute("MystQuant") < player:GetAttribute("MystCap") then
-            data.LastMystColl = os.time()
-            player:SetAttribute("MystQuant", math.min(player:GetAttribute("MystQuant") + 2, player:GetAttribute("MystCap")))
+            data.LastMystColl = data.TotalTime
+            player:SetAttribute("MystQuant", math.min(player:GetAttribute("MystQuant") + 1, player:GetAttribute("MystCap")))
         end
 
-        data.LastTime += dt
     end
 end
 

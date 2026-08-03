@@ -178,6 +178,7 @@ export type Effects_Modules_UDim2 = { xScale: number, xOffset: number, yScale: n
 export type Monetization_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Quests_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Float_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
+export type Float_Player = Player
 function SerdesFunctions.Player_WriteEVENT_PlayerData(Value: string): ()
 	-- Allocate BLOCK: 3 bytes
 	local BLOCK_START = Allocate(3)
@@ -469,6 +470,13 @@ function SerdesFunctions.Float_WriteFUNCTION_RETURN_AttemptDescend(Value: boolea
 	buffer.writeu8(SendBuffer, BLOCK_START + 1, InvocationIdentifier)
 	buffer.writeu8(SendBuffer, BLOCK_START + 2, 1)
 	buffer.writeu8(SendBuffer, BLOCK_START + 3, Value and 1 or 0)
+end
+
+function SerdesFunctions.Float_WriteEVENT_PlayerEnteredFloat(Value: Player?): ()
+	-- Allocate BLOCK: 1 bytes
+	local BLOCK_START = Allocate(1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 19)
+	table.insert(SendInstances, Value or Null)
 end
 
 if not RunService:IsRunning() then
@@ -779,6 +787,12 @@ if not RunService:IsRunning() then
 		},
 		AttemptDescend = {
 			On = NOOP
+		},
+		PlayerEnteredFloat = {
+			Fire = NOOP,
+			FireAll = NOOP,
+			FireList = NOOP,
+			FireExcept = NOOP
 		},
 	},
 	})
@@ -1909,6 +1923,52 @@ local Returns = table.freeze({
 				end
 			end)
 		end
+		},
+		PlayerEnteredFloat = {
+			Fire = function(Player: Player, Value: Player?): ()
+				Load(PlayersMap[Player])
+				SerdesFunctions.Float_WriteEVENT_PlayerEnteredFloat(Value)
+				PlayersMap[Player] = Save()
+			end,
+			FireAll = function(Value: Player?): ()
+				Load()
+				SerdesFunctions.Float_WriteEVENT_PlayerEnteredFloat(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireList = function(List: {Player}, Value: Player?): ()
+				Load()
+				SerdesFunctions.Float_WriteEVENT_PlayerEnteredFloat(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in List do
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
+			FireExcept = function(Except: Player, Value: Player?): ()
+				Load()
+				SerdesFunctions.Float_WriteEVENT_PlayerEnteredFloat(Value)
+				local Buffer, Size, Instances = SendBuffer, SendCursor, SendInstances
+				for _, Player in Players:GetPlayers() do
+					if Player == Except then
+						continue
+					end
+					Load(PlayersMap[Player])
+					local Position = Allocate(Size)
+					buffer.copy(SendBuffer, Position, Buffer, 0, Size)
+					table.move(Instances, 1, #Instances, #SendInstances + 1, SendInstances)
+					PlayersMap[Player] = Save()
+				end
+			end,
 		},
 	},
 })

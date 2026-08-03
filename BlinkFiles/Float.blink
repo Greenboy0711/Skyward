@@ -1,6 +1,7 @@
 option PromiseLibrary = "ReplicatedStorage.Packages.Promise"
 
 import "./Modules"
+type Player = Instance(Player)
 
 event CameraAng {
     from: Client,
@@ -12,4 +13,11 @@ event CameraAng {
 function AttemptDescend {
     Yield: Promise,
     Return: boolean
+}
+
+event PlayerEnteredFloat {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+    data: Player?
 }

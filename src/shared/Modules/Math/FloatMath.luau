@@ -1,7 +1,7 @@
 local GaussianRand = require(script.Parent.GaussianRand)
 local floatMath = {}
 
-floatMath.MYST_COLL_INTER = 1
+floatMath.MYST_COLL_INTER = 0.1
 
 function floatMath.calcHeight(rootPartY)
     return math.round(rootPartY / 2)
