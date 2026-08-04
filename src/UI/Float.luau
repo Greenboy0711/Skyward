@@ -5,9 +5,12 @@ local PlrData = require(ReplicatedStorage.Shared.Modules.Data.PlrData).client
 local FloatMath = require(ReplicatedStorage.Shared.Modules.Math.FloatMath)
 local BarMeters = require(ReplicatedStorage.Shared.Modules.UI.BarMeters)
 local ColorThemes = require(ReplicatedStorage.Shared.Modules.UI.ColorThemes)
+local ToggleBlackBars = require(ReplicatedStorage.Shared.Modules.UI.ToggleBlackBars)
 local Float = {}
 
 local player = game:GetService("Players").LocalPlayer
+local camera = workspace.CurrentCamera
+local windStreaks = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Effects"):WaitForChild("WindStreaks")
 
 local screenUi = player.PlayerGui:WaitForChild(script.Name)
 local heightFrame = screenUi:WaitForChild("HeightFrame")
@@ -17,6 +20,10 @@ local mystBar = screenUi:WaitForChild("MystBar")
 local mystCollectToggle = mystBar:WaitForChild("MystCollectToggle")
 
 local buttonCooldown = false
+
+local function lerp(a, b, t)
+	return a + (b - a) * t
+end
 
 local function updateMystBar(mystQuant, mystCap)
     mystBar.CapacityLabel.Text = mystQuant.."/"..mystCap
@@ -55,6 +62,20 @@ function Float.init()
 
     player:GetAttributeChangedSignal("IsCollMyst"):Connect(function()
         ColorThemes.toggleTheme(player:GetAttribute("IsCollMyst") and "ButtonGreen" or "ButtonRed", mystCollectToggle)
+    end)
+
+    player:GetAttributeChangedSignal("InDescent"):Connect(function()
+        if player:GetAttribute("InDescent") then
+            camera.FieldOfView = lerp(camera.FieldOfView, 60, 0.1)
+            windStreaks.Parent = workspace:WaitForChild("Effects")
+
+            ToggleBlackBars(true)
+        else
+            camera.FieldOfView = lerp(camera.FieldOfView, 70, 0.1)
+            windStreaks.Parent = game:GetService("ReplicatedStorage").Assets.Effects
+
+            ToggleBlackBars(false)
+        end
     end)
 end
 
