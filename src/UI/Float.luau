@@ -14,10 +14,15 @@ local windStreaks = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Effec
 
 local screenUi = player.PlayerGui:WaitForChild(script.Name)
 local heightFrame = screenUi:WaitForChild("HeightFrame")
+local speedLabel = screenUi:WaitForChild("SpeedLabel")
 local descendButton = screenUi:WaitForChild("DescendButton")
 local strengthLabel = screenUi:WaitForChild("BubbleStrengthLabel")
+
 local mystBar = screenUi:WaitForChild("MystBar")
 local mystCollectToggle = mystBar:WaitForChild("MystCollectToggle")
+
+local breathBar = screenUi:WaitForChild("BreathBar")
+local breathHoldToggle = breathBar:WaitForChild("BreathHoldToggle")
 
 local buttonCooldown = false
 
@@ -25,12 +30,13 @@ local function lerp(a, b, t)
 	return a + (b - a) * t
 end
 
-local function updateMystBar(mystQuant, mystCap)
-    mystBar.CapacityLabel.Text = mystQuant.."/"..mystCap
-    BarMeters.resize(mystBar.Bar, mystQuant / mystCap)
+local function updateBar(bar, quant, cap)
+    bar.CapacityLabel.Text = quant.."/"..cap
+    BarMeters.resize(bar.BarX, quant / cap)
 end
 
 function Float.init()
+    -- Buttons
     descendButton.MouseButton1Click:Connect(function()
         if not screenUi.Enabled or buttonCooldown or not player:GetAttribute("InFloat") or player:GetAttribute("InDescent") then return end
         buttonCooldown = true
@@ -44,7 +50,7 @@ function Float.init()
         task.wait(0.05)
         buttonCooldown = false
     end)
-
+    
     mystCollectToggle.MouseButton1Click:Connect(function()
         if buttonCooldown then return end
         buttonCooldown = true
@@ -54,14 +60,28 @@ function Float.init()
         buttonCooldown = false
     end)
 
+    breathHoldToggle.MouseButton1Click:Connect(function()
+        if buttonCooldown then return end
+        buttonCooldown = true
+        BlinkMain.Float.ToggleBreathHold.Fire()
+
+        task.wait(0.05)
+        buttonCooldown = false
+    end)
+
+    -- Updating states
     player:GetAttributeChangedSignal("InFloat"):Connect(function()
         local inFloat = player:GetAttribute("InFloat")
         screenUi.Enabled = inFloat
         descendButton.Visible = true
     end)
-
+    
     player:GetAttributeChangedSignal("IsCollMyst"):Connect(function()
         ColorThemes.toggleTheme(player:GetAttribute("IsCollMyst") and "ButtonGreen" or "ButtonRed", mystCollectToggle)
+    end)
+
+    player:GetAttributeChangedSignal("IsHoldingBreath"):Connect(function()
+        ColorThemes.toggleTheme(player:GetAttribute("IsHoldingBreath") and "ButtonGreen" or "ButtonRed", breathHoldToggle)
     end)
 
     player:GetAttributeChangedSignal("InDescent"):Connect(function()
@@ -77,39 +97,51 @@ function Float.init()
             ToggleBlackBars(false)
         end
     end)
+
+    RunService.RenderStepped:Connect(function()
+        if not player:GetAttribute("InFloat") then return end
+        local char = player.Character
+        if not char then return end
+        local height = FloatMath.calcHeight(char.PrimaryPart.Position.Y)
+
+        heightFrame.Label.Text = height.." m"
+        speedLabel.Text = FloatMath.calcHeight(char.Bubble.LinearVelocity.VectorVelocity.Y).." m/s"
+
+        if player:GetAttribute("InDescent") then return end
+
+        -- Bubble strength effects
+        local popLimit = FloatMath.calcPopLimit(PlrData.Upgrades["Bubble Resistance"]())
+        local thresholds = FloatMath.calcStrengthThrs(popLimit, 1)
+        local strengthLvl = 1
+        for i, threshold in pairs(thresholds) do if height >= threshold then strengthLvl = #FloatMath.StrengthLevels - (i - 1); break end end
+        strengthLabel.Text = "Bubble Strength: "..FloatMath.StrengthLevels[strengthLvl]["Name"]
+
+    end)
+
+    -- Myst bar states
+    updateBar(mystBar, player:GetAttribute("MystQuant"), player:GetAttribute("MystCap"))
+    player:GetAttributeChangedSignal("MystCap"):Connect(function()
+        updateBar(mystBar, player:GetAttribute("MystQuant"), player:GetAttribute("MystCap"))
+    end)
+
+    player:GetAttributeChangedSignal("MystQuant"):Connect(function()
+        updateBar(mystBar, player:GetAttribute("MystQuant"), player:GetAttribute("MystCap"))
+    end)
+
+    player:GetAttributeChangedSignal("MystQuality"):Connect(function()
+        mystBar.QualityLabel.Text = "Myst Quality Multiplier x"..player:GetAttribute("MystQuality")
+    end)
+
+    -- Breath bar states
+    updateBar(breathBar, player:GetAttribute("BreathQuant"), player:GetAttribute("BreathCap"))
+    player:GetAttributeChangedSignal("BreathQuant"):Connect(function()
+        updateBar(breathBar, player:GetAttribute("BreathQuant"), player:GetAttribute("BreathCap"))
+    end)
+
+    player:GetAttributeChangedSignal("BreathCap"):Connect(function()
+        updateBar(breathBar, player:GetAttribute("BreathQuant"), player:GetAttribute("BreathCap"))
+    end)
 end
-
-RunService.RenderStepped:Connect(function()
-    if not player:GetAttribute("InFloat") then return end
-    local char = player.Character
-    if not char then return end
-    local height = FloatMath.calcHeight(char.PrimaryPart.Position.Y)
-
-    heightFrame.Label.Text = height.." m"
-
-    if player:GetAttribute("InDescent") then return end
-
-    -- Bubble strength effects
-    local popLimit = FloatMath.calcPopLimit(PlrData.Upgrades["Bubble Resistance"]())
-    local thresholds = FloatMath.calcStrengthThrs(popLimit, 1)
-    local strengthLvl = 1
-    for i, threshold in pairs(thresholds) do if height >= threshold then strengthLvl = #FloatMath.StrengthLevels - (i - 1); break end end
-    strengthLabel.Text = "Bubble Strength: "..FloatMath.StrengthLevels[strengthLvl]["Name"]
-
-end)
-
-updateMystBar(player:GetAttribute("MystQuant"), player:GetAttribute("MystCap"))
-player:GetAttributeChangedSignal("MystCap"):Connect(function()
-    updateMystBar(player:GetAttribute("MystQuant"), player:GetAttribute("MystCap"))
-end)
-
-player:GetAttributeChangedSignal("MystQuant"):Connect(function()
-    updateMystBar(player:GetAttribute("MystQuant"), player:GetAttribute("MystCap"))
-end)
-
-player:GetAttributeChangedSignal("MystQuality"):Connect(function()
-    mystBar.QualityLabel.Text = "Myst Quality Multiplier x"..player:GetAttribute("MystQuality")
-end)
 
 type Float = typeof(Float) & {
 

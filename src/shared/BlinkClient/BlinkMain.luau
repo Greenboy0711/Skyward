@@ -530,6 +530,12 @@ function SerdesFunctions.Float_WriteEVENT_ToggleMystColl(Value: nil): ()
 	buffer.writeu8(SendBuffer, BLOCK_START + 0, 1)
 end
 
+function SerdesFunctions.Float_WriteEVENT_ToggleBreathHold(Value: nil): ()
+	-- Allocate BLOCK: 1 bytes
+	local BLOCK_START = Allocate(1)
+	buffer.writeu8(SendBuffer, BLOCK_START + 0, 2)
+end
+
 if not RunService:IsRunning() then
 	local NOOP = function() end
 	local Returns = table.freeze({
@@ -816,6 +822,9 @@ if not RunService:IsRunning() then
 			On = NOOP
 		},
 		ToggleMystColl = {
+			Fire = NOOP
+		},
+		ToggleBreathHold = {
 			Fire = NOOP
 		},
 	},
@@ -1663,6 +1672,17 @@ local Returns = table.freeze({
 				local Previous = Save()
 				Load()
 				SerdesFunctions.Float_WriteEVENT_ToggleMystColl(Value)
+				local Buffer = buffer.create(SendCursor)
+				buffer.copy(Buffer, 0, SendBuffer, 0, SendCursor)
+				Unreliable:FireServer(Buffer, SendInstances)
+				Load(Previous)
+			end
+		},
+		ToggleBreathHold = {
+			Fire = function(Value: nil): ()
+				local Previous = Save()
+				Load()
+				SerdesFunctions.Float_WriteEVENT_ToggleBreathHold(Value)
 				local Buffer = buffer.create(SendCursor)
 				buffer.copy(Buffer, 0, SendBuffer, 0, SendCursor)
 				Unreliable:FireServer(Buffer, SendInstances)

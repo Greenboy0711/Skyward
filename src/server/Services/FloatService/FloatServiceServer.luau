@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local Promise = require(ReplicatedStorage.Packages.Promise)
 local BlinkMain = require(ServerScriptService.Server.BlinkServer.BlinkMain)
 local PlrData = require(ReplicatedStorage.Shared.Modules.Data.PlrData).server
 local ZonePlus = require(ReplicatedStorage.Packages.ZonePlus)
@@ -16,6 +17,7 @@ local GROUND_Y = 5
 local Y_SPEED = 25
 local MOVE_SPEED = 10
 local GRAV_ACC = -30
+local BREATH_ACC = -40
 
 local function resetPlrFloatData(player, char)
     player:SetAttribute("InFloat", false)
@@ -23,18 +25,23 @@ local function resetPlrFloatData(player, char)
 
     player:SetAttribute("MystQuant", 0)
     player:SetAttribute("MystQuality", 1)
-    print("Hi")
-
+    
     char.Bubble:Destroy()
     char.PrimaryPart.AlignOrientation.Enabled = false
     char.Humanoid.PlatformStand = false
+
+    Promise.try(function()
+        player:SetAttribute("CanFloat", false)
+        task.wait(1)
+        player:SetAttribute("CanFloat", true)
+    end)
 end
 
 function FloatServiceServer.init()
     local floatZone = ZonePlus.new(floatObjs:WaitForChild("FloatZone"))
 
     floatZone.playerEntered:Connect(function(player) -- Player enters float
-        if player:GetAttribute("InFloat") then return end
+        if player:GetAttribute("InFloat") or not player:GetAttribute("CanFloat") then return end
         local char = player.Character
         if not char then return end
 
@@ -45,9 +52,11 @@ function FloatServiceServer.init()
             PopLimit = FloatMath.calcPopLimit(PlrData[player].Upgrades["Bubble Resistance"]()), 
             PrevVelocity = Vector3.new(0, Y_SPEED, 0),
             TotalTime = os.clock(),
-            LastMystColl = os.clock()
+            LastMystColl = os.clock(),
+            LastBreathLoss = os.clock()
         }
 
+        player:SetAttribute("BreathQuant", player:GetAttribute("BreathCap"))
         player:SetAttribute("InFloat", true)
         char.Humanoid.PlatformStand = true
 
@@ -78,6 +87,10 @@ function FloatServiceServer.init()
     BlinkMain.Float.ToggleMystColl.On(function(player)
         player:SetAttribute("IsCollMyst", not player:GetAttribute("IsCollMyst"))
     end)
+
+    BlinkMain.Float.ToggleBreathHold.On(function(player)
+        player:SetAttribute("IsHoldingBreath", not player:GetAttribute("IsHoldingBreath"))
+    end)
 end
 
 function FloatServiceServer.Heartbeat(args) -- Manage floating players
@@ -88,6 +101,18 @@ function FloatServiceServer.Heartbeat(args) -- Manage floating players
         local char = player.Character
         if not char then continue end
         data.TotalTime += dt
+        local addYVelocity = 0
+
+        -- Breath hold
+        if not player:GetAttribute("InDescent") and player:GetAttribute("IsHoldingBreath") and data.TotalTime - data.LastBreathLoss >= FloatMath.BREATH_HOLD_INTER
+                and player:GetAttribute("BreathQuant") > 0 then
+            data.LastBreathLoss = data.TotalTime
+            player:SetAttribute("BreathQuant", math.max(player:GetAttribute("BreathQuant") - 1, 0))
+
+            addYVelocity += dt * BREATH_ACC
+        elseif (not player:GetAttribute("InDescent") and not player:GetAttribute("IsHoldingBreath")) or player:GetAttribute("BreathQuant") == 0 then
+            addYVelocity += dt * -BREATH_ACC
+        end
 
         pcall(function() -- Set movement
             local currentVelocity
@@ -95,19 +120,20 @@ function FloatServiceServer.Heartbeat(args) -- Manage floating players
                 if data.PrevVelocity.Y > 0 then data.PrevVelocity = Vector3.new(data.PrevVelocity.X, 0, data.PrevVelocity.Z) end
                 currentVelocity =  Vector3.new(0, data.PrevVelocity.Y + dt * GRAV_ACC, 0)
 
-                print(FloatMath.calcHeight(char.PrimaryPart.Position.Y))
                 if FloatMath.calcHeight(char.PrimaryPart.Position.Y) <= GROUND_Y then -- End of descent
                     resetPlrFloatData(player, char)
                 end
             else
-                currentVelocity = Vector3.new(0, Y_SPEED, 0)
+                currentVelocity = Vector3.new(0, math.min(data.PrevVelocity.Y + addYVelocity, Y_SPEED), 0)
             end
+
             if char.Humanoid.MoveDirection == Vector3.new(0, 0, 0) then
                 currentVelocity = Vector3.new(0, currentVelocity.Y, 0)
             else
                 currentVelocity = Vector3.new(char.Humanoid.MoveDirection.x * MOVE_SPEED, currentVelocity.Y, char.Humanoid.MoveDirection.z * MOVE_SPEED)
             end
 
+            -- print(currentVelocity.Y, data.PrevVelocity.Y, addYVelocity)
             char.Bubble.LinearVelocity.VectorVelocity = currentVelocity
             data.PrevVelocity = currentVelocity
         end)
@@ -119,6 +145,7 @@ function FloatServiceServer.Heartbeat(args) -- Manage floating players
             char.Bubble.CanCollide = false
         end
 
+        -- Myst collection
         if not player:GetAttribute("InDescent") and player:GetAttribute("IsCollMyst") and data.TotalTime - data.LastMystColl >= FloatMath.MYST_COLL_INTER
                 and player:GetAttribute("MystQuant") < player:GetAttribute("MystCap") then
             data.LastMystColl = data.TotalTime

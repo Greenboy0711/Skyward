@@ -9,11 +9,13 @@ type ItemData = {
 }
 
 local template = {
-	["Currencies"] = {BoomBux = 10000, Spins = 3},
+	["Currencies"] = {Coins = 10000, Spins = 3},
 	["Stats"] = {["Time Played"] = 0, ["Bloxes"] = 0, ["Mines Placed"] = 0, ["Wins"] = 0},
 	["DailyRewards"] = {["Time"] = -1, ["Day"] = 1, ["Special"] = 0},
 
-	["Upgrades"] = {["Bubble Resistance"] = 100, ["Myst Capacity"] = 500},
+	["Upgrades"] = {["Bubble Resistance"] = 100, ["Myst Capacity"] = 500, ["Breath Capacity"] = 1000},
+
+	["Tycoon"] = {},
 
 	["Settings"] = {
 		["Background Music"] = 100,

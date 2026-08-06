@@ -5,10 +5,11 @@ local sizeTI = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In
 
 function barMeters.resize(bar, percent)
     percent = math.min(math.max(percent, 0), 1)
+
     local newSize
-    if bar.Size.Y.Scale == 1 then
+    if bar.Name == "BarX" then
         newSize = UDim2.fromScale(percent, 1)
-    elseif bar.Size.X.Scale == 1 then
+    elseif bar.Name == "BarY" then
         newSize = UDim2.fromScale(1, percent)
     end
 

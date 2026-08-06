@@ -2,6 +2,7 @@ return {
     ["RetroExplosion"] = {Id = "109113881542036", Volume = 5}, 
     ["MinePlace"] = {Id = "135323017496834", Volume = 5, Pitch = {0.95, 1.05}},
     ["SizeUp"] = {Id = "131535367752538", Volume = 2, Pitch = {0.9, 1.1}},
+    ["Wind"] = {Id = "93035214379043", Volume = 1, Pitch = {0.9, 1.1}},
 
     ["CrateEnd"] = {Id = "4612378086", Volume = 0.3},
     ["CrateShockwave"] = {Id = "178452217", Volume = 0.3},

@@ -25,12 +25,14 @@ end
 local function destroyFloatEffects(curPlr)
     local effs = floatEffects[curPlr]
     floatEffects[curPlr] = nil
+    
     for eff, v in pairs(effs) do 
         if v then 
             if eff == "DescendTrail" then
                 Debris:AddItem(v, 1)
+            else
+                v:Destroy()
             end
-            v:Destroy()
         end 
     end
 end

@@ -5,6 +5,8 @@ local TweenService = game:GetService("TweenService")
 local Promise = require(ReplicatedStorage.Packages.Promise)
 local TopBarPlus = require(ReplicatedStorage.Packages.TopBarPlus)
 local BlinkMain = require(ReplicatedStorage.Shared.BlinkClient.BlinkMain)
+local NumAbbreviate = require(ReplicatedStorage.Shared.Modules.Math.NumAbbreviate)
+local PlrData = require(ReplicatedStorage.Shared.Modules.Data.PlrData).client
 local UI = {}
 
 local camera = workspace.CurrentCamera
@@ -191,14 +193,14 @@ function UI.init(player: Player)
     end
 
     -- Init currency displays
-    -- for _, frame in pairs (CollectionService:GetTagged("BoomBuxDisplay")) do
-    --     frame.Label.Text = DataService:get({"Currencies", "BoomBux"})
-    -- end
-    -- DataService:getChangedSignal({"Currencies", "BoomBux"}):Connect(function(newValue)
-    --     for _, frame in pairs (CollectionService:GetTagged("BoomBuxDisplay")) do
-    --         frame.Label.Text = newValue
-    --     end
-    -- end)
+    for _, frame in pairs (CollectionService:GetTagged("CoinsDisplay")) do
+        frame.Label.Text = NumAbbreviate(PlrData.Currencies.Coins())
+    end
+    PlrData.Currencies.Coins.Changed(function(newVal)
+        for _, frame in pairs (CollectionService:GetTagged("CoinsDisplay")) do
+            frame.Label.Text = NumAbbreviate(newVal)
+        end
+    end)
 
     local canvasProps = {"AnchorPoint", "Position", "Size", "Parent", "ZIndex"}
     for _, v in pairs(CollectionService:GetTagged("CanvasRotated")) do -- Fix rotated elements

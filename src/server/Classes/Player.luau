@@ -1,9 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Promise = require(ReplicatedStorage.Packages.Promise)
 local SafeDestroy = require(ReplicatedStorage.Shared.Modules.Data.SafeDestroy)
 local FloatMath = require(ReplicatedStorage.Shared.Modules.Math.FloatMath)
-local BlinkMain = require(ServerScriptService.Server.BlinkServer.BlinkMain)
 local PlayerStore = require(ServerScriptService.Server.Classes.Stores.PlayerStore)
 local PlrData = require(ReplicatedStorage.Shared.Modules.Data.PlrData).server
 
@@ -92,6 +90,7 @@ function Player:destroy()
 end
 
 function Player.init(self: PlayerObj): ()
+	self.Player:SetAttribute("CanFloat", true)
 	self.Player:SetAttribute("InFloat", false)
 	self.Player:SetAttribute("InDescent", false)
 
@@ -100,6 +99,10 @@ function Player.init(self: PlayerObj): ()
 	self.Player:SetAttribute("MystQuant", 0)
 	self.Player:SetAttribute("MystQuality", 1)
 	self.Player:SetAttribute("IsCollMyst", true)
+
+	self.Player:SetAttribute("BreathCap", FloatMath.calcBreathCap(initData.Upgrades["Breath Capacity"]()))
+	self.Player:SetAttribute("BreathQuant", self.Player:GetAttribute("BreathCap"))
+	self.Player:SetAttribute("IsHoldingBreath", false)
 end
 
 function Player.new(player: Player): PlayerObj

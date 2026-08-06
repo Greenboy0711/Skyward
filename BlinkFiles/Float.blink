@@ -27,3 +27,9 @@ event ToggleMystColl {
     type: Unreliable,
     call: SingleAsync,
 }
+
+event ToggleBreathHold {
+    from: Client,
+    type: Unreliable,
+    call: SingleAsync,
+}

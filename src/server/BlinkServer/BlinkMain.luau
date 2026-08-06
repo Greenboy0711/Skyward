@@ -174,6 +174,7 @@ Queue.Reliable[17] = table.create(256)
 Queue.Unreliable[0] = table.create(256)
 Queue.Reliable[18] = table.create(256)
 Queue.Unreliable[1] = table.create(256)
+Queue.Unreliable[2] = table.create(256)
 export type Player_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Effects_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
 export type Monetization_Modules_UDim2 = { xScale: number, xOffset: number, yScale: number, yOffset: number }
@@ -481,6 +482,10 @@ function SerdesFunctions.Float_WriteEVENT_PlayerEnteredFloat(Value: Player?): ()
 end
 
 function SerdesFunctions.Float_ReadEVENT_ToggleMystColl(): (nil)
+	return nil
+end
+
+function SerdesFunctions.Float_ReadEVENT_ToggleBreathHold(): (nil)
 	return nil
 end
 
@@ -802,6 +807,9 @@ if not RunService:IsRunning() then
 		ToggleMystColl = {
 			On = NOOP
 		},
+		ToggleBreathHold = {
+			On = NOOP
+		},
 	},
 	})
 	return Returns :: BLINK_EVENTS_SYMBOL
@@ -1019,6 +1027,11 @@ Unreliable.OnServerEvent:Connect(function(Player: Player, Buffer: buffer, Instan
 			local Value: nil = SerdesFunctions.Float_ReadEVENT_ToggleMystColl()
 			if Events.Unreliable[1] ~= nil then
 				task.spawn(Events.Unreliable[1], Player, Value)
+			end
+		elseif Index == 2 then
+			local Value: nil = SerdesFunctions.Float_ReadEVENT_ToggleBreathHold()
+			if Events.Unreliable[2] ~= nil then
+				task.spawn(Events.Unreliable[2], Player, Value)
 			end
 		end
 	end
@@ -1989,6 +2002,16 @@ local Returns = table.freeze({
 				return function (): ()
 					if Events.Unreliable[1] == Listener then
 						Events.Unreliable[1] = nil
+					end
+				end
+			end
+		},
+		ToggleBreathHold = {
+			On = function(Listener: (Player: Player, Value: nil) -> ()): () -> ()
+				Events.Unreliable[2] = Listener
+				return function (): ()
+					if Events.Unreliable[2] == Listener then
+						Events.Unreliable[2] = nil
 					end
 				end
 			end

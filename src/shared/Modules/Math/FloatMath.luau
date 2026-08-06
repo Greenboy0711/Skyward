@@ -2,6 +2,7 @@ local GaussianRand = require(script.Parent.GaussianRand)
 local floatMath = {}
 
 floatMath.MYST_COLL_INTER = 0.05
+floatMath.BREATH_HOLD_INTER = 0.1
 
 function floatMath.calcHeight(rootPartY)
     return math.round(rootPartY / 2)
@@ -21,6 +22,10 @@ function floatMath.calcStrengthThrs(popLimit, insightLvl)
 end
 
 function floatMath.calcMystCap(baseCap)
+    return baseCap
+end
+
+function floatMath.calcBreathCap(baseCap)
     return baseCap
 end
 
