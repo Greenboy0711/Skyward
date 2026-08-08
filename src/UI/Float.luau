@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local BlinkMain = require(ReplicatedStorage.Shared.BlinkClient.BlinkMain)
+local ConvertPosY = require(ReplicatedStorage.Shared.Modules.Math.ConvertPosY)
 local PlrData = require(ReplicatedStorage.Shared.Modules.Data.PlrData).client
 local FloatMath = require(ReplicatedStorage.Shared.Modules.Math.FloatMath)
 local BarMeters = require(ReplicatedStorage.Shared.Modules.UI.BarMeters)
@@ -14,6 +15,7 @@ local windStreaks = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Effec
 
 local screenUi = player.PlayerGui:WaitForChild(script.Name)
 local heightFrame = screenUi:WaitForChild("HeightFrame")
+local mapBorderFrame = screenUi:WaitForChild("MapBorderFrame")
 local speedLabel = screenUi:WaitForChild("SpeedLabel")
 local descendButton = screenUi:WaitForChild("DescendButton")
 local strengthLabel = screenUi:WaitForChild("BubbleStrengthLabel")
@@ -31,6 +33,7 @@ local function lerp(a, b, t)
 end
 
 local function updateBar(bar, quant, cap)
+    if quant == nil or cap == nil then return end
     bar.CapacityLabel.Text = quant.."/"..cap
     BarMeters.resize(bar.BarX, quant / cap)
 end
@@ -73,7 +76,6 @@ function Float.init()
     player:GetAttributeChangedSignal("InFloat"):Connect(function()
         local inFloat = player:GetAttribute("InFloat")
         screenUi.Enabled = inFloat
-        descendButton.Visible = true
     end)
     
     player:GetAttributeChangedSignal("IsCollMyst"):Connect(function()
@@ -103,9 +105,14 @@ function Float.init()
         local char = player.Character
         if not char then return end
         local height = FloatMath.calcHeight(char.PrimaryPart.Position.Y)
-
+        
+        -- Height and speed
         heightFrame.Label.Text = height.." m"
         speedLabel.Text = FloatMath.calcHeight(char.Bubble.LinearVelocity.VectorVelocity.Y).." m/s"
+
+        -- Map border
+        local r = (ConvertPosY(char.PrimaryPart.Position) - Vector3.new(0, 0, 0)).Magnitude
+        mapBorderFrame.Visible = r > FloatMath.MAP_RADIUS
 
         if player:GetAttribute("InDescent") then return end
 
@@ -116,6 +123,8 @@ function Float.init()
         for i, threshold in pairs(thresholds) do if height >= threshold then strengthLvl = #FloatMath.StrengthLevels - (i - 1); break end end
         strengthLabel.Text = "Bubble Strength: "..FloatMath.StrengthLevels[strengthLvl]["Name"]
 
+        -- Pop button visibility
+        descendButton.Visible = FloatMath.calcHeight(char.PrimaryPart.Position.Y) >= FloatMath.POP_THRES
     end)
 
     -- Myst bar states

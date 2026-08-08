@@ -16,6 +16,7 @@ local template = {
 	["Upgrades"] = {["Bubble Resistance"] = 100, ["Myst Capacity"] = 500, ["Breath Capacity"] = 1000},
 
 	["Tycoon"] = {},
+	["Myst Stores"] = {},
 
 	["Settings"] = {
 		["Background Music"] = 100,

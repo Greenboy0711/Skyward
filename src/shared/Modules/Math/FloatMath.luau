@@ -3,6 +3,11 @@ local floatMath = {}
 
 floatMath.MYST_COLL_INTER = 0.05
 floatMath.BREATH_HOLD_INTER = 0.1
+floatMath.POP_THRES = 75
+
+floatMath.MAP_RADIUS = 375
+floatMath.MAX_RADIUS = 400
+floatMath.MAX_BORDER_PUSH = 10
 
 function floatMath.calcHeight(rootPartY)
     return math.round(rootPartY / 2)
